@@ -3,7 +3,6 @@
 # start-upload.sh - TEMPORÄR UPLOAD-SERVER (drag & drop)
 # Kör: ./start-upload.sh [port]   (default 8000)
 
-set -euo pipefail
 PORT="${1:-8000}"
 UPLOAD_DIR="${HOME}/uploads"
 USERNAME="upload"
@@ -39,22 +38,26 @@ echo "Öppna i telefonens browser NU:"
 
 echo "  http://127.0.0.1:${PORT}/upload"
 
-IP-lista (robust, ingen exit vid fel)
-echo "Nätverks-IP:er (välj den telefonen når):"
-ip -4 addr show scope global 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | grep -v '^127.' | while read -r ip; do
-echo "  http://\( {ip}: \){PORT}/upload"
-done || echo "  (Kör 'ip addr show' för att se IP:er manuellt)"
+# Fixad IP-detektering (tvingar aldrig exit)
+IPS=$(ip -4 addr show scope global 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | grep -v '^127\.' || true)
+if [ -n "$IPS" ]; then
+    echo "$IPS" | while read -r ip; do
+        echo "  http://\( {ip}: \){PORT}/upload"
+    done
+else
+    echo "  (Kolla manuellt med: ip addr show)"
+fi
+
 echo
-echo "→ Öppna länken, ange användarnamn + lösenord"
-echo "→ Ladda upp fil (drag & drop OK)"
-echo "→ När klar: Ctrl+C här"
+echo "→ Öppna länken på telefonen, ange användarnamn + lösenord"
+echo "→ Ladda upp filen (drag & drop fungerar)"
+echo "→ När klar: Ctrl+C här i terminalen"
 echo "==========================================="
 
 cd "$UPLOAD_DIR" || exit 1
 
-if [ "$USE_AUTH" = fales ]; then
+if [ "$USE_AUTH" = false ]; then
     exec python3 -m uploadserver "\({PORT}" --basic-auth " \){AUTH}"
 else
     exec python3 -m uploadserver "${PORT}"
 fi
-EOF
