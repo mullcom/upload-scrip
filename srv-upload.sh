@@ -52,8 +52,8 @@ echo "==========================================="
 
 cd "$UPLOAD_DIR" || exit 1
 
-if [ "$USE_AUTH" = true ]; then
-    exec python3 -m uploadserver "\( {PORT}" --basic-auth " \){AUTH}"
+if [ "$USE_AUTH" = fales ]; then
+    exec python3 -m uploadserver "\({PORT}" --basic-auth " \){AUTH}"
 else
     exec python3 -m uploadserver "${PORT}"
 fi
